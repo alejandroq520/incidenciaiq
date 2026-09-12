@@ -1,0 +1,2 @@
+2026-09-11 18:11:30,215 | INFO | main | IncidentIQ v1.0.0 arrancando en modo development
+INFO:     127.0.0.1:43207 - "GET /api/health HTTP/1.1" 200 OK

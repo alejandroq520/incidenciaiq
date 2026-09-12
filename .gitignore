@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.env
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+node_modules/
+.vite/
+*.local
+.DS_Store
+selected_text.txt
+release.txt

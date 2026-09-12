@@ -1,0 +1,67 @@
+INFO:     Started server process [22956]
+INFO:     Waiting for application startup.
+2026-09-11 18:43:08,217 | INFO | main | IncidentIQ v1.2.0 arrancando en modo development
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:44511 - "GET /api/ai/insights?period=30d&limit=4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44528 - "GET /api/incidents/137 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44530 - "GET /api/ai/evaluation HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44532 - "GET /api/ai/insights?period=30d&limit=2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44585 - "GET /api/analytics/by-category?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44589 - "GET /api/analytics/by-category?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44586 - "GET /api/incidents?limit=5&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44584 - "GET /api/analytics/metrics?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44590 - "GET /api/incidents?limit=5&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44591 - "GET /api/analytics/metrics?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44597 - "GET /api/analytics/by-category?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44599 - "GET /api/analytics/resolution-time?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44596 - "GET /api/analytics/metrics?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44598 - "GET /api/analytics/trend?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44604 - "GET /api/analytics/resolution-time?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44603 - "GET /api/analytics/by-category?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44608 - "GET /api/analytics/trend?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44606 - "GET /api/analytics/metrics?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44610 - "GET /api/incidents?skip=0&limit=20&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44612 - "GET /api/incidents?skip=0&limit=20&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44616 - "GET /api/analytics/by-category?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44618 - "GET /api/incidents?limit=5&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44617 - "GET /api/analytics/metrics?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44620 - "GET /api/analytics/by-category?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44622 - "GET /api/incidents?limit=5&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44624 - "GET /api/analytics/metrics?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44626 - "GET /api/incidents?skip=0&limit=20&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44628 - "GET /api/incidents?skip=0&limit=20&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44634 - "GET /api/analytics/by-category?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44636 - "GET /api/analytics/resolution-time?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44635 - "GET /api/analytics/trend?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44638 - "GET /api/analytics/by-category?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44633 - "GET /api/analytics/metrics?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44641 - "GET /api/analytics/resolution-time?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44642 - "GET /api/analytics/trend?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44644 - "GET /api/analytics/metrics?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44647 - "GET /api/incidents?skip=0&limit=20&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44649 - "GET /api/incidents?skip=0&limit=20&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44653 - "GET /api/analytics/by-category?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44655 - "GET /api/incidents?limit=5&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44654 - "GET /api/analytics/metrics?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44658 - "GET /api/analytics/by-category?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44659 - "GET /api/incidents?limit=5&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44661 - "GET /api/analytics/metrics?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44663 - "GET /api/incidents?skip=0&limit=20&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44665 - "GET /api/incidents?skip=0&limit=20&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44667 - "GET /api/incidents/136 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44669 - "GET /api/incidents/136 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44671 - "GET /api/incidents?skip=0&limit=20&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44673 - "GET /api/incidents?skip=0&limit=20&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44678 - "GET /api/analytics/by-category?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44679 - "GET /api/incidents?limit=5&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44681 - "GET /api/analytics/by-category?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44677 - "GET /api/analytics/metrics?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44683 - "GET /api/incidents?limit=5&sort_by=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44685 - "GET /api/analytics/metrics?period=30d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45113 - "GET /api/analitica/metricas?period=30d HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:45115 - "GET /api/incidencias?limit=5&sort_by=creado_en&order=desc HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:45114 - "GET /api/analitica/por-categoria?period=30d HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:45119 - "GET /api/analitica/metricas?period=30d HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:45120 - "GET /api/incidencias?limit=5&sort_by=creado_en&order=desc HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:45121 - "GET /api/analitica/por-categoria?period=30d HTTP/1.1" 404 Not Found

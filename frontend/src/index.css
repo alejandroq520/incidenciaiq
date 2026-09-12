@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  body {
+    @apply bg-iq-bg text-iq-text antialiased;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 8px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white border border-iq-border rounded-xl shadow-card;
+  }
+
+  .card-hover {
+    @apply transition-all duration-150 hover:shadow-card-hover hover:border-gray-300;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-iq-primary px-4 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-blue-600 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-iq-border bg-white px-4 py-2 text-sm font-medium text-iq-body transition-all duration-150 hover:bg-iq-hover active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-iq-danger px-4 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-red-600 active:scale-[0.98] disabled:opacity-50;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-iq-border bg-white px-3 py-2 text-sm text-iq-text placeholder-iq-sub outline-none transition-all duration-150 focus:border-iq-primary focus:ring-2 focus:ring-blue-100;
+  }
+
+  .select {
+    @apply w-full rounded-lg border border-iq-border bg-white px-3 py-2 text-sm text-iq-text outline-none transition-all duration-150 focus:border-iq-primary focus:ring-2 focus:ring-blue-100;
+  }
+
+  .table-th {
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-iq-sub;
+  }
+
+  .table-td {
+    @apply px-4 py-3 text-sm text-iq-body;
+  }
+
+  .skeleton {
+    @apply animate-shimmer rounded-md bg-[linear-gradient(90deg,#f3f4f6_25%,#e5e7eb_37%,#f3f4f6_63%)] bg-[length:400px_100%];
+  }
+}
+
+.focused-grow {
+  transition: all 0.2s ease;
+}
+
+.focused-grow:focus-within {
+  transform: scale(1.01);
+}
