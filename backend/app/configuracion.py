@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,6 +10,14 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
+
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def _normalizar_driver(cls, valor: str) -> str:
+        """Asegura el driver psycopg v3 aunque la URL venga sin +psycopg (Neon)."""
+        if valor.startswith("postgresql://"):
+            return valor.replace("postgresql://", "postgresql+psycopg://", 1)
+        return valor
 
     app_name: str = "IncidenciaIQ"
     app_version: str = "1.2.0"
