@@ -36,7 +36,8 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o-mini"
     openai_max_tokens: int = 1000
     openai_temperature: float = 0.7
-    openai_timeout_seconds: float = 30.0
+    openai_timeout_seconds: float = 60.0
+    openai_max_reintentos: int = 1
 
     log_level: str = "INFO"
     log_format: str = "text"

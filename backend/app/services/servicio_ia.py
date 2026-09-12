@@ -7,6 +7,7 @@ funcional en demos y desarrollo local.
 
 import json
 import re
+import time
 from datetime import datetime, timezone
 from typing import Any
 
@@ -78,16 +79,26 @@ def _client():
 
 def _llamar_llm(system: str, user: str) -> str:
     client = _client()
-    completion = client.chat.completions.create(
-        model=settings.openai_model,
-        max_tokens=settings.openai_max_tokens,
-        temperature=settings.openai_temperature,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-    )
-    return completion.choices[0].message.content or ""
+    ultimo_error: Exception | None = None
+    for intento in range(settings.openai_max_reintentos + 1):
+        try:
+            completion = client.chat.completions.create(
+                model=settings.openai_model,
+                max_tokens=settings.openai_max_tokens,
+                temperature=settings.openai_temperature,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+            )
+            return completion.choices[0].message.content or ""
+        except Exception as e:
+            ultimo_error = e
+            if intento < settings.openai_max_reintentos:
+                time.sleep(1.0 * (intento + 1))
+    if ultimo_error is not None:
+        raise ultimo_error
+    return ""
 
 
 def _extraer_json(text: str) -> Any:
@@ -427,8 +438,14 @@ def _armar_contexto(db: Session) -> dict:
 
 def responder_pregunta(db: Session, pregunta: str) -> dict:
     context = _armar_contexto(db)
+    pregunta = (pregunta or "").strip()
     try:
-        if settings.llm_enabled:
+        if not pregunta:
+            respuesta = (
+                "No escribiste ninguna pregunta. Escribe una consulta en el chat, "
+                "por ejemplo: \"Resume las incidencias de esta semana\"."
+            )
+        elif settings.llm_enabled:
             try:
                 system, user = asistente_prompt.build_prompt(context, pregunta)
                 raw = _llamar_llm(system, user)

@@ -26,7 +26,10 @@ export function useIA() {
       const errMsg = {
         id: `e-${Date.now()}`,
         role: "assistant",
-        content: "No se pudo procesar la pregunta. Intenta de nuevo.",
+        content:
+          e?.message && !/ECONNABORTED|Network Error|timeout/i.test(e.message)
+            ? e.message
+            : "No se pudo procesar la pregunta. Intenta de nuevo.",
         isError: true,
       };
       setMessages((prev) => [...prev, errMsg]);

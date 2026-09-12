@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class SolicitudPregunta(BaseModel):
-    pregunta: str = Field(min_length=5, max_length=500)
+    pregunta: str = Field(min_length=0, max_length=500)
 
 
 class ContextoPregunta(BaseModel):
