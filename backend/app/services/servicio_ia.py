@@ -8,7 +8,7 @@ funcional en demos y desarrollo local.
 import json
 import re
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy import func, select
@@ -94,6 +94,9 @@ def _llamar_llm(system: str, user: str) -> str:
             return completion.choices[0].message.content or ""
         except Exception as e:
             ultimo_error = e
+            status_code = getattr(e, "status_code", None)
+            if status_code in (401, 403) or "invalid_api_key" in str(e).lower() or "authenticationerror" in type(e).__name__.lower():
+                raise e
             if intento < settings.openai_max_reintentos:
                 time.sleep(1.0 * (intento + 1))
     if ultimo_error is not None:
@@ -212,7 +215,14 @@ def _construir_justificacion(
 ) -> str:
     parts: list[str] = []
     if fuente in ("heuristic", "heuristic_case") and evidence:
-        matched = [kw for group in evidence.values() for kw in group]
+        if isinstance(evidence, dict) and "evidence" in evidence:
+            evidence = evidence["evidence"]
+        matched = [
+            kw
+            for group in evidence.values()
+            if isinstance(group, (list, tuple, set))
+            for kw in group
+        ]
         if matched:
             parts.append(
                 f"Clasificación por reglas: coincidieron las palabras clave "
@@ -261,8 +271,9 @@ def clasificar_incidencia(db: Session, incidencia: Incidencia) -> dict | None:
                 result = None
 
         if result is None:
-            evidence = clasificar_heuristica(incidencia.titulo, incidencia.descripcion)
-            if evidence.get("categoria_sugerida") == "Otros" and ref_categoria:
+            heuristic_data = clasificar_heuristica(incidencia.titulo, incidencia.descripcion)
+            evidence = heuristic_data.get("evidence", {})
+            if heuristic_data.get("categoria_sugerida") == "Otros" and ref_categoria:
                 result = {
                     "categoria_sugerida": ref_categoria,
                     "prioridad_sugerida": "Media",
@@ -277,14 +288,24 @@ def clasificar_incidencia(db: Session, incidencia: Incidencia) -> dict | None:
                     "confianza": round(min(similarity + 0.25, 0.9), 2),
                 }
                 fuente = "case"
+            elif ref_incidencia is not None:
+                fuente = "heuristic_case"
+                base_conf = float(heuristic_data.get("confianza", 0.7) or 0.7)
+                result = {
+                    "categoria_sugerida": heuristic_data["categoria_sugerida"],
+                    "prioridad_sugerida": heuristic_data["prioridad_sugerida"],
+                    "resumen": heuristic_data["resumen"],
+                    "recomendacion": heuristic_data["recomendacion"],
+                    "confianza": round(0.6 * base_conf + 0.4 * similarity, 2),
+                }
             else:
                 fuente = "heuristic"
                 result = {
-                    "categoria_sugerida": evidence["categoria_sugerida"],
-                    "prioridad_sugerida": evidence["prioridad_sugerida"],
-                    "resumen": evidence["resumen"],
-                    "recomendacion": evidence["recomendacion"],
-                    "confianza": evidence["confianza"],
+                    "categoria_sugerida": heuristic_data["categoria_sugerida"],
+                    "prioridad_sugerida": heuristic_data["prioridad_sugerida"],
+                    "resumen": heuristic_data["resumen"],
+                    "recomendacion": heuristic_data["recomendacion"],
+                    "confianza": heuristic_data["confianza"],
                 }
         elif ref_incidencia is not None:
             fuente = "openai_case"
@@ -354,12 +375,46 @@ def _id_prioridades_criticas(db: Session) -> list[int]:
 
 
 def _armar_contexto(db: Session) -> dict:
+    now = datetime.now(timezone.utc)
+    semana_inicio = now - timedelta(days=7)
+
     estado_ids = _mapa_id_estados(db)
     closed_ids = [sid for name, sid in estado_ids.items() if name == "cerrada"]
     open_ids = [sid for name, sid in estado_ids.items() if name == "abierta"]
     pending_ids = [sid for name, sid in estado_ids.items() if name == "pendiente"]
     critical_ids = _id_prioridades_criticas(db)
 
+    # Métricas específicas de esta semana (últimos 7 días)
+    incidencias_semana = db.scalars(
+        select(Incidencia)
+        .where(Incidencia.creado_en >= semana_inicio)
+        .order_by(Incidencia.creado_en.desc())
+        .options(
+            selectinload(Incidencia.categoria),
+            selectinload(Incidencia.prioridad),
+            selectinload(Incidencia.estado),
+        )
+    ).all()
+
+    semana_total = len(incidencias_semana)
+    semana_abiertas = sum(1 for i in incidencias_semana if i.estado_id in open_ids)
+    semana_criticas = sum(1 for i in incidencias_semana if i.prioridad_id in critical_ids)
+    semana_cerradas = sum(1 for i in incidencias_semana if i.estado_id in closed_ids)
+
+    if incidencias_semana:
+        semana_detalle = "\n".join(
+            f"- INC-{i.id} [{i.estado.name}] {i.titulo} (creada: {i.creado_en.strftime('%Y-%m-%d %H:%M')}, cat: {i.categoria.name}, prio: {i.prioridad.name})"
+            for i in incidencias_semana[:10]
+        )
+        semana_resumen_titulos = ", ".join(
+            f"INC-{i.id}: '{i.titulo}' ({i.creado_en.strftime('%d/%m')})"
+            for i in incidencias_semana[:5]
+        )
+    else:
+        semana_detalle = "(No se registraron incidencias en los últimos 7 días)"
+        semana_resumen_titulos = ""
+
+    # Histórico general acumulado
     total = db.scalar(select(func.count()).select_from(Incidencia)) or 0
     critical = (
         db.scalar(
@@ -407,11 +462,22 @@ def _armar_contexto(db: Session) -> dict:
         select(Incidencia)
         .order_by(Incidencia.creado_en.desc())
         .limit(10)
-        .options(selectinload(Incidencia.categoria), selectinload(Incidencia.prioridad))
+        .options(
+            selectinload(Incidencia.categoria),
+            selectinload(Incidencia.prioridad),
+            selectinload(Incidencia.estado),
+        )
     ).all()
     recent_list = "\n".join(
-        f"- INC-{i.id} [{i.estado.name}] {i.titulo} (categoría: {i.categoria.name}, prioridad: {i.prioridad.name})"
+        f"- INC-{i.id} [{i.estado.name}] {i.titulo} (creada: {i.creado_en.strftime('%Y-%m-%d')}, categoría: {i.categoria.name}, prioridad: {i.prioridad.name})"
         for i in recent
+    )
+
+    ultima_incidencia = recent[0] if recent else None
+    ultima_info = (
+        f"INC-{ultima_incidencia.id} ('{ultima_incidencia.titulo}') el {ultima_incidencia.creado_en.strftime('%Y-%m-%d')}"
+        if ultima_incidencia
+        else "ninguna"
     )
 
     critical_by_cat: dict[str, int] = {}
@@ -424,6 +490,14 @@ def _armar_contexto(db: Session) -> dict:
         critical_by_cat[name] = critical_by_cat.get(name, 0) + 1
 
     return {
+        "fecha_actual": now.strftime("%Y-%m-%d"),
+        "semana_total": semana_total,
+        "semana_abiertas": semana_abiertas,
+        "semana_criticas": semana_criticas,
+        "semana_cerradas": semana_cerradas,
+        "semana_detalle": semana_detalle,
+        "semana_resumen_titulos": semana_resumen_titulos,
+        "ultima_info": ultima_info,
         "total_incidencias": total,
         "open_incidencias": open_count,
         "pending_incidencias": pending,
@@ -475,37 +549,59 @@ def responder_pregunta(db: Session, pregunta: str) -> dict:
 
 def _respuesta_plantilla(ctx: dict, pregunta: str) -> str:
     lowered = pregunta.lower()
+    if (
+        "esta semana" in lowered
+        or "última semana" in lowered
+        or "ultima semana" in lowered
+        or "de la semana" in lowered
+        or "en la semana" in lowered
+    ):
+        if ctx["semana_total"] == 0:
+            return (
+                f"En los últimos 7 días (esta semana) no se registraron nuevas incidencias. "
+                f"La última registrada en el sistema fue {ctx['ultima_info']}. "
+                f"En el histórico acumulado hay {ctx['total_incidencias']} incidencias "
+                f"({ctx['open_incidencias']} abiertas, {ctx['critical_incidencias']} críticas)."
+            )
+        titulos = f": {ctx['semana_resumen_titulos']}" if ctx.get("semana_resumen_titulos") else "."
+        return (
+            f"Esta semana (últimos 7 días) se registraron {ctx['semana_total']} incidencias "
+            f"({ctx['semana_abiertas']} abiertas, {ctx['semana_criticas']} críticas y {ctx['semana_cerradas']} cerradas)"
+            f"{titulos} "
+            f"El histórico acumulado del sistema tiene {ctx['total_incidencias']} incidencias."
+        )
     if "crítica" in lowered or "critica" in lowered or "críticas" in lowered:
         by_cat = ", ".join(
             f"{k} ({v})" for k, v in ctx["critical_por_categoria"].items()
         )
         return (
-            f"Actualmente existen {ctx['critical_incidencias']} incidencias críticas abiertas. "
+            f"Actualmente existen {ctx['critical_incidencias']} incidencias críticas abiertas en el histórico acumulado. "
             f"Desglose por categoría: {by_cat or 'sin datos'}."
         )
     if "categoría" in lowered or "categoria" in lowered or "más incidencias" in lowered:
         lines = ctx["categories_breakdown"].splitlines()
         return (
-            f"La categoría con más incidencias es: {lines[0].replace('- ', '')}." 
+            f"La categoría con más incidencias acumuladas es: {lines[0].replace('- ', '')}." 
             if lines
             else "No hay datos de categorías disponibles."
         )
     if "promedio" in lowered or "tiempo de resolución" in lowered or "resolución" in lowered:
         return (
-            f"El tiempo promedio de resolución es de {ctx['avg_resolution_time']} horas "
+            f"El tiempo promedio de resolución histórico es de {ctx['avg_resolution_time']} horas "
             f"(sobre {ctx['closed_incidencias']} incidencias cerradas)."
         )
-    if "esta semana" in lowered or "semana" in lowered or "resumen" in lowered or "resume" in lowered:
+    if "resumen" in lowered or "resume" in lowered:
         return (
-            f"Resumen del sistema: {ctx['total_incidencias']} incidencias totales, "
+            f"Resumen general del sistema: {ctx['total_incidencias']} incidencias totales acumuladas, "
             f"{ctx['open_incidencias']} abiertas, {ctx['pending_incidencias']} pendientes y "
-            f"{ctx['closed_incidencias']} cerradas. Hay {ctx['critical_incidencias']} críticas. "
+            f"{ctx['closed_incidencias']} cerradas. Hay {ctx['critical_incidencias']} críticas históricas. "
+            f"En los últimos 7 días se registraron {ctx['semana_total']} nuevas incidencias. "
             f"El tiempo promedio de resolución es {ctx['avg_resolution_time']}h."
         )
     return (
-        f"El sistema tiene {ctx['total_incidencias']} incidencias registradas: "
+        f"El sistema tiene {ctx['total_incidencias']} incidencias registradas en el historial: "
         f"{ctx['open_incidencias']} abiertas, {ctx['pending_incidencias']} pendientes y "
-        f"{ctx['closed_incidencias']} cerradas. "
+        f"{ctx['closed_incidencias']} cerradas ({ctx['semana_total']} en los últimos 7 días). "
         f"Hazme preguntas más específicas (por ejemplo, sobre críticas, categorías o tiempos de resolución)."
     )
 
