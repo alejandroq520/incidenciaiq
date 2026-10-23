@@ -1,5 +1,7 @@
 # IncidenciaIQ
 
+https://incidenciaiq.onrender.com/
+
 **Monitoreo inteligente de incidencias operativas, todo en español.**
 
 Plataforma web SaaS para centralizar, registrar, clasificar y analizar incidencias de TI u operaciones. Combina una API REST (FastAPI), base de datos PostgreSQL y un agente de IA que clasifica cada incidencia automáticamente, genera perspectivas, responde preguntas operativas y además **mide su propia precisión** con datos reales.
