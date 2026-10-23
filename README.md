@@ -30,8 +30,8 @@ Plataforma web SaaS para centralizar, registrar, clasificar y analizar incidenci
 
 - **Registro de incidencias** con categoría, prioridad y estado (catálogos sembrados: Acceso, Pagos, Sistema, Red, Otros).
 - **Clasificación IA automática** en el mismo POST de creación: sugiere categoría, prioridad, resumen, recomendación, confianza y **justificación trazable**.
-- **Explicabilidad real**: cada sugerencia registra su `fuente` (`openai`, `heuristic`, `case`, `openai_case`) y referencia un **caso histórico** con su **índice de similitud**.
-- **AI Help**: asistente en lenguaje natural (ChatGPT) sobre datos reales de la BD, con respaldo determinista por reglas si no hay API key.
+- **Explicabilidad real**: cada sugerencia registra su `fuente` (`openai`, `heuristic`, `case`, `openai_case`, `heuristic_case`) y referencia un **caso histórico** con su **índice de similitud**.
+- **AI Help**: asistente en lenguaje natural sobre datos reales de la BD, con delimitación temporal precisa (diferenciación entre actividad de la semana actual e histórico acumulado) y respaldo determinista por reglas si no hay API key.
 - **Perspectivas automáticas**: detectan incrementos, caídas y actividad anómala por categoría comparando el período real contra el período anterior.
 - **Evaluación del clasificador**: precisión, cobertura, aciertos/errores globales y desglose por fuente y por categoría, calculados solo con datos reales.
 - **Analítica completa**: KPIs con comparación vs período anterior, desglose por categoría, tendencia (diaria/horaria) y estadísticas de tiempo de resolución (promedio, mediana, P95, por categoría/prioridad).
@@ -171,9 +171,10 @@ IncidentIQ/
 │   ├── docker-compose.yml     # Postgres + backend para desarrollo local
 │   ├── requirements.txt       # Dependencias fijadas (pinned)
 │   ├── .env.example           # Plantilla de variables de entorno
-│   ├── tests/                 # pytest
+│   ├── tests/                 # pytest (unitarios y de integración)
 │   │   ├── __init__.py
-│   │   └── test_ia.py
+│   │   ├── test_ia.py         # pruebas de heurística y asistente
+│   │   └── test_api_completo.py # suite integral de todos los endpoints y SPA
 │   └── app/
 │       ├── main.py            # App FastAPI, CORS, health, seed, montaje del frontend
 │       ├── configuracion.py   # Settings desde env (pydantic-settings)
@@ -287,8 +288,9 @@ Todas son opcionales salvo `DATABASE_URL` (en producción). Fuente: `app/configu
 | --- | --- | --- |
 | LLM válido + caso histórico | `openai_case` | `0.6·conf_llm + 0.4·similitud` |
 | LLM válido sin caso | `openai` | la del modelo |
+| Sin LLM, con caso histórico | `heuristic_case` | `0.6·conf_reglas + 0.4·similitud` |
 | Sin LLM, heurística "Otros", con caso | `case` | `min(similitud + 0.25, 0.9)` |
-| Sin LLM | `heuristic` | reglas por palabras clave (0.55–0.97) |
+| Sin LLM (solo reglas) | `heuristic` | reglas por palabras clave (0.55–0.97) |
 
 4. Se persiste `ai_analyses` con `fuente`, `justificacion`, `incidencia_referencia_id` e `indice_similitud`, y se devuelve la incidencia ya clasificada.
 
@@ -381,7 +383,7 @@ Query params: `skip` (0), `limit` (1–100, defecto 20), `estado_id`, `prioridad
 
 ```bash
 cd backend
-pytest                     # 3 tests pasan (FastAPI TestClient + SQLite en memoria)
+pytest                     # 12 tests pasan (FastAPI TestClient: CRUD, analítica, IA, clasificador y SPA)
 ```
 
 ---
